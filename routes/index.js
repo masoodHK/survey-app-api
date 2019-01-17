@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Users = require("../models/users");
+const Surveys = require("../models/surveys");
+const Answers = require("../models/answers");
 const crypto = require("crypto");
 
 function checkSignIn(req, res, next) {
@@ -12,17 +14,39 @@ function checkSignIn(req, res, next) {
     }
 }
 
-router.get('/survey/:id', checkSignIn, (req, res) => { })
+router.get('/survey/:id', checkSignIn, (req, res) => {
+    Surveys.findById(req.params.id)
+        .then(data => res.send(data))
+        .catch(error => res.send({ message: "Unable to get surveys" }))
+});
 
-router.get('/survey', checkSignIn, (req, res) => { })
+router.get('/survey', checkSignIn, (req, res) => {
+    Surveys.find({})
+        .then(data => res.send(data))
+        .catch(error => res.send({ message: "Unable to get surveys" }))
+});
 
 router.get('/profile/:id', checkSignIn, (req, res) => {
     Users.findById(req.params.id)
         .then(result => { res.send(result) })
         .catch(error => res.send({ message: "Unable to find user", error }))
-})
+});
 
-router.post('/survey/:id', checkSignIn, (req, res) => { })
+router.post('/survey/:id', checkSignIn, (req, res) => {
+    const answer = {};
+    answer["survey_id"] = req.params.id;
+    answer["given_by"] = req.session.user.username
+    const body = req.body;
+    body.forEach((answer, index) => {
+        answer["option_chosen"] = answer.option;
+        answer["question"] = answer.question;
+        const answer = new Answers(answer);
+        answer.save()
+        if (index + 1 === body.length) {
+            res.send({ message: "Your answer to the survey is noted" })
+        }
+    });
+})
 
 router.post('/login', (req, res) => {
     Users.findOne({ username: req.body.username }, (err, user) => {
@@ -31,14 +55,15 @@ router.post('/login', (req, res) => {
         }
         else {
             if (user.password === crypto.createHash('md5').update(req.body.password).digest('hex')) {
+                req.session.user = user;
                 res.status(201).send({ message: "User Logged in", user })
             }
             else {
                 res.status(404).send({ message: "User Not Found" })
             }
         }
-    })
-})
+    });
+});
 
 router.post('/signup', (req, res) => {
     const info = {}
@@ -72,7 +97,7 @@ router.post('/logout', (req, res) => {
     if (req.session.user) {
         req.session.destroy((error) => {
             if (error) {
-                res.send({ error })
+                res.status(400).send({ message: error })
             }
             else {
                 res.send({ message: "Logged Out" })
@@ -80,7 +105,7 @@ router.post('/logout', (req, res) => {
         })
     }
     else {
-        res.send({ message: "User is already logged out" })
+        res.status(400).send({ message: "User is already logged out" })
     }
 })
 

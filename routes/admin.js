@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Users = require("../models/users");
+const Surveys = require("../models/surveys");
 const crypto = require("crypto");
 
 const isAdmin = function (req, res, next) {
@@ -13,15 +14,25 @@ const isAdmin = function (req, res, next) {
     }
 }
 
-router.get('/', isAdmin, (req, res) => { })
-
 router.get('/result/:id', isAdmin, (req, res) => { })
 
-router.get('/survey/:id', isAdmin, (req, res) => { })
+router.get('/survey/:id', isAdmin, (req, res) => {
+    Surveys.findById(req.params.id)
+        .then(data => res.send(data))
+        .catch(error => res.send({ message: "Unable to get surveys" }))
+})
 
-router.get('/survey', isAdmin, (req, res) => { })
+router.get('/survey', isAdmin, (req, res) => {
+    Surveys.findById(req.params.id)
+        .then(data => res.send(data))
+        .catch(error => res.send({ message: "Unable to get surveys" }))
+})
 
-router.get('/profile', isAdmin, (req, res) => { })
+router.get('/profile', isAdmin, (req, res) => {
+    Users.findById(req.params.id)
+        .then(result => { res.send(result) })
+        .catch(error => res.send({ message: "Unable to find user", error }))
+})
 
 router.post('/login', (req, res) => {
     Users.findOne({ username: req.body.username }, (err, user) => {
@@ -37,8 +48,8 @@ router.post('/login', (req, res) => {
                 res.status(400).send({ message: "Wrong Password" })
             }
         }
-    })
-})
+    });
+});
 
 router.post('/create', (req, res) => {
     const info = {}
@@ -59,18 +70,16 @@ router.post('/create', (req, res) => {
                 .then(() => {
                     req.session.user = info;
                     res.send({ message: "Admin is created" })
-                }).catch(err => {
-                    res.send({ message: err })
-                })
+                }).catch((err) => res.status(404).send({ message: err }))
         }
     })
-})
+});
 
 router.post('/logout', (req, res) => {
     if (req.session.user) {
         req.session.destroy((error) => {
             if (error) {
-                res.send({ error })
+                res.status(400).send({ error })
             }
             else {
                 res.send({ message: "Logged Out" })
@@ -78,14 +87,27 @@ router.post('/logout', (req, res) => {
         })
     }
     else {
-        res.send({ message: "Admin is already logged out" })
+        res.status(404).send({ message: "Admin is already logged out" })
     }
-})
+});
 
-router.post('/survey', isAdmin, (req, res) => { })
+router.post('/survey', isAdmin, (req, res) => {
+    const survey = new Surveys(req.body);
+    survey.save()
+        .then(() => res.send({ message: "Your survey has been added" }))
+        .catch(() => res.send({ message: "Unable to add your survey" }))
+});
 
-router.put('/survey/:id', isAdmin, (req, res) => { })
+router.put('/survey/:id', isAdmin, (req, res) => {
+    Surveys.updateOne({ _id: req.params.id }, req.body)
+        .then(() => res.send({ message: "Successfully updated the survey" }))
+        .catch(() => res.status(404).send({ message: "Unable to updated the surveys" }))
+});
 
-router.delete('/survey/:id', isAdmin, (req, res) => { })
+router.delete('/survey/:id', isAdmin, (req, res) => {
+    Surveys.deleteOne({ _id: req.params.id })
+        .then(() => res.send({ message: "Successfully deleted the survey" }))
+        .catch(() => res.status(404).send({ message: "Unable to deleted the surveys" }))
+});
 
 module.exports = router
