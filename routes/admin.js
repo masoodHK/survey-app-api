@@ -28,11 +28,11 @@ router.get('/survey', isAdmin, (req, res) => {
         .catch(error => res.send({ message: "Unable to get surveys" }))
 })
 
-router.get('/profile', isAdmin, (req, res) => {
-    Users.findById(req.params.id)
-        .then(result => { res.send(result) })
-        .catch(error => res.send({ message: "Unable to find user", error }))
-})
+// router.get('/profile/:id', isAdmin, (req, res) => {
+//     Users.findById(req.params.id)
+//         .then(result => { res.send(result) })
+//         .catch(error => res.send({ message: "Unable to find user", error }))
+// })
 
 router.post('/login', (req, res) => {
     Users.findOne({ username: req.body.username }, (err, user) => {

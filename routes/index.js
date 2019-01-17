@@ -26,11 +26,14 @@ router.get('/survey', checkSignIn, (req, res) => {
         .catch(error => res.send({ message: "Unable to get surveys" }))
 });
 
-router.get('/profile/:id', checkSignIn, (req, res) => {
-    Users.findById(req.params.id)
-        .then(result => { res.send(result) })
-        .catch(error => res.send({ message: "Unable to find user", error }))
-});
+// router.get('/profile/:id', checkSignIn, (req, res) => {
+//     Users.findById(req.params.id)
+//         .then(result => { 
+//             delete result["password"]; 
+//             res.send(result) 
+//         })
+//         .catch(error => res.status(404).send({ message: "Unable to find user", error }))
+// });
 
 router.post('/survey/:id', checkSignIn, (req, res) => {
     const answer = {};
@@ -93,6 +96,13 @@ router.post('/signup', (req, res) => {
     })
 })
 
+router.post('/survey', isAdmin, (req, res) => {
+    const survey = new Surveys(req.body);
+    survey.save()
+        .then(() => res.send({ message: "Your survey has been added" }))
+        .catch(() => res.send({ message: "Unable to add your survey" }))
+});
+
 router.post('/logout', (req, res) => {
     if (req.session.user) {
         req.session.destroy((error) => {
@@ -107,6 +117,18 @@ router.post('/logout', (req, res) => {
     else {
         res.status(400).send({ message: "User is already logged out" })
     }
-})
+});
+
+router.put('/survey/:id', isAdmin, (req, res) => {
+    Surveys.updateOne({ _id: req.params.id }, req.body)
+        .then(() => res.send({ message: "Successfully updated the survey" }))
+        .catch(() => res.status(404).send({ message: "Unable to updated the surveys" }))
+});
+
+router.delete('/survey/:id', isAdmin, (req, res) => {
+    Surveys.deleteOne({ _id: req.params.id })
+        .then(() => res.send({ message: "Successfully deleted the survey" }))
+        .catch(() => res.status(404).send({ message: "Unable to deleted the surveys" }))
+});
 
 module.exports = router
