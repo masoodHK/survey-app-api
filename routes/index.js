@@ -15,19 +15,19 @@ function checkSignIn(req, res, next) {
     }
 }
 
-router.get('/survey/:id', checkSignIn, (req, res) => {
+router.get('/survey/:id', (req, res) => {
     Surveys.findById(req.params.id)
         .then(data => res.send(data))
         .catch(error => res.send({ message: "Unable to get surveys" }))
 });
 
-router.get('/survey', checkSignIn, (req, res) => {
+router.get('/survey', (req, res) => {
     Surveys.find({})
         .then(data => res.send(data))
         .catch(error => res.send({ message: "Unable to get surveys" }))
 });
 
-router.post('/survey/:id', checkSignIn, (req, res) => {
+router.post('/survey/:id', (req, res) => {
     const answer = {};
     answer["survey_id"] = req.params.id;
     answer["given_by"] = req.session.user.username
@@ -88,7 +88,7 @@ router.post('/signup', (req, res) => {
     })
 })
 
-router.post('/survey', checkSignIn, (req, res) => {
+router.post('/survey', (req, res) => {
     const survey = new Surveys(req.body);
     survey.save()
         .then(() => res.send({ message: "Your survey has been added" }))
@@ -111,13 +111,13 @@ router.post('/logout', (req, res) => {
     }
 });
 
-router.put('/survey/:id', checkSignIn, (req, res) => {
+router.put('/survey/:id', (req, res) => {
     Surveys.updateOne({ _id: req.params.id }, req.body)
         .then(() => res.send({ message: "Successfully updated the survey" }))
         .catch(() => res.status(404).send({ message: "Unable to updated the surveys" }))
 });
 
-router.delete('/survey/:id', checkSignIn, (req, res) => {
+router.delete('/survey/:id', (req, res) => {
     Surveys.deleteOne({ _id: req.params.id })
         .then(() => res.send({ message: "Successfully deleted the survey" }))
         .catch(() => res.status(404).send({ message: "Unable to deleted the surveys" }))
