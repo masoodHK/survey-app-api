@@ -3,11 +3,10 @@ const cors = require("cors");
 const helmet = require("helmet");
 const mongoose = require("mongoose");
 const session = require("express-session")
-const MongoDBStore = require("connect-mongodb-session")(session);
+const MongoDBStore = require("connect-mongo")(session);
 
 const store = new MongoDBStore({
-    uri: "mongodb://user:user123@ds125331.mlab.com:25331/survey-app",
-    collection: "sessions",
+    url: "mongodb://user:user123@ds125331.mlab.com:25331/survey-app",
 })
 
 mongoose.connect("mongodb://user:user123@ds125331.mlab.com:25331/survey-app", { useNewUrlParser: true })
@@ -36,7 +35,6 @@ app.use(session({
 
 
 app.use('/api', require('./routes/index'))
-app.use('/admin/api', require('./routes/admin'))
 
 app.get("/", (req, res) => {
     res.send({ "message": "it works" });

@@ -6,6 +6,7 @@ const Answers = require("../models/answers");
 const crypto = require("crypto");
 
 function checkSignIn(req, res, next) {
+    console.log(req.session.user)
     if (req.session.user) {
         next();
     } else {
@@ -26,15 +27,6 @@ router.get('/survey', checkSignIn, (req, res) => {
         .catch(error => res.send({ message: "Unable to get surveys" }))
 });
 
-// router.get('/profile/:id', checkSignIn, (req, res) => {
-//     Users.findById(req.params.id)
-//         .then(result => { 
-//             delete result["password"]; 
-//             res.send(result) 
-//         })
-//         .catch(error => res.status(404).send({ message: "Unable to find user", error }))
-// });
-
 router.post('/survey/:id', checkSignIn, (req, res) => {
     const answer = {};
     answer["survey_id"] = req.params.id;
@@ -43,8 +35,8 @@ router.post('/survey/:id', checkSignIn, (req, res) => {
     body.forEach((answer, index) => {
         answer["option_chosen"] = answer.option;
         answer["question"] = answer.question;
-        const answer = new Answers(answer);
-        answer.save()
+        const answerModel = new Answers(answer);
+        answerModel.save()
         if (index + 1 === body.length) {
             res.send({ message: "Your answer to the survey is noted" })
         }
@@ -96,7 +88,7 @@ router.post('/signup', (req, res) => {
     })
 })
 
-router.post('/survey', isAdmin, (req, res) => {
+router.post('/survey', checkSignIn, (req, res) => {
     const survey = new Surveys(req.body);
     survey.save()
         .then(() => res.send({ message: "Your survey has been added" }))
@@ -119,13 +111,13 @@ router.post('/logout', (req, res) => {
     }
 });
 
-router.put('/survey/:id', isAdmin, (req, res) => {
+router.put('/survey/:id', checkSignIn, (req, res) => {
     Surveys.updateOne({ _id: req.params.id }, req.body)
         .then(() => res.send({ message: "Successfully updated the survey" }))
         .catch(() => res.status(404).send({ message: "Unable to updated the surveys" }))
 });
 
-router.delete('/survey/:id', isAdmin, (req, res) => {
+router.delete('/survey/:id', checkSignIn, (req, res) => {
     Surveys.deleteOne({ _id: req.params.id })
         .then(() => res.send({ message: "Successfully deleted the survey" }))
         .catch(() => res.status(404).send({ message: "Unable to deleted the surveys" }))
